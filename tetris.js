@@ -133,28 +133,6 @@ function eliminarMatrix(bigMatrix, smallMatrix, startRow, startCol) {
     }
 }
 
-function bfs(matrix, startRow, startCol) {
-    const queue = [];
-    const directions = [
-        { dr: -1, dc: 0 },
-        { dr: 1, dc: 0 },
-        { dr: 0, dc: -1 },
-        { dr: 0, dc: 1 }
-    ];
-    queue.push({ row: startRow, col: startCol });
-
-    while (queue.length > 0) {
-        const { row, col } = queue.shift();
-        for (const { dr, dc } of directions) {
-            const newRow = row + dr;
-            const newCol = col + dc;
-            if (newRow >= 1 && newRow < matrix.length && newCol >= 1 && newCol < matrix[0].length && matrix[newRow][newCol] === 2) {
-                queue.push({ row: newRow, col: newCol });
-                return 0;
-            }
-        }
-    }
-}
 function bfs2(matrix, startRow, startCol) {
     const queue = [];
     const directions = [
@@ -192,11 +170,10 @@ function startGame() {
     let currentY = 0;
     let piece = getRandomTetromino();
     setInterval(function () {
-        let colition = colitions(block.matrix)
-        if(colition === 0){
+        let colition = detectCollisions(block.matrix)
+        if(colition){
             markOld(block.matrix)
-            // console.log(block.matrix)
-            // piece = getRandomTetromino();
+            piece = getRandomTetromino();
             currentY = 0
         }
         if (currentY > 0) {
@@ -205,17 +182,21 @@ function startGame() {
                 deleteTetromino(block, 0, 0);
             }
         }
-        console.log(block.matrix)
-        insertMatrix(block.matrix, t.matrix, currentY, 0);
+        insertMatrix(block.matrix, piece.matrix, currentY, 0);
         drawTetromino(block, 0, 0);
-        currentY += 1;
-        if (currentY === 5) {
-            markOld(block.matrix)
-            console.log(block.matrix)
-            //piece = getRandomTetromino();
+        if (canMove(piece.matrix, currentY + 1, 0)) {
+            currentY += 1;
+        } else {
+            markOld(block.matrix);
+            piece = getRandomTetromino();
             currentY = 0;
+            if (!canMove(piece.matrix, currentY, 0)) {
+                // Game Over
+                alert("Game Over");
+                clearInterval(this);
+            }
         }
-    }, 3000);
+    }, 100);
 }
 
 function markOld(matrix) {
@@ -228,16 +209,49 @@ function markOld(matrix) {
     }
 }
 
-function colitions(matrix) {
-    let colition = 1
+function checkCollision(matrix, row, col) {
+    const directions = [
+        { dr: -1, dc: 0 }, // Arriba
+        { dr: 1, dc: 0 },  // Abajo
+        { dr: 0, dc: -1 }, // Izquierda
+        { dr: 0, dc: 1 }   // Derecha
+    ];
+
+    for (const { dr, dc } of directions) {
+        const newRow = row + dr;
+        const newCol = col + dc;
+        if (newRow >= 0 && newRow < matrix.length && newCol >= 0 && newCol < matrix[0].length && matrix[newRow][newCol] === 2) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function detectCollisions(matrix) {
     for (let row = 0; row < matrix.length; row++) {
         for (let col = 0; col < matrix[row].length; col++) {
-            if (matrix[row][col] === 1) {
-                colition = bfs(matrix, row, col);
+            if (matrix[row][col] === 1 && checkCollision(matrix, row, col)) {
+                return true;
             }
         }
     }
-    return colition
+    return false;
+}
+
+function canMove(matrix, offsetY, offsetX) {
+    for (let row = 0; row < matrix.length; row++) {
+        for (let col = 0; col < matrix[row].length; col++) {
+            if (matrix[row][col]) {
+                let newX = col + offsetX;
+                let newY = row + offsetY;
+                if (newY >= block.matrix.length || newX < 0 || newX >= block.matrix[0].length || block.matrix[newY][newX] === 2) {
+                    return false;
+                }
+            }
+        }
+    }
+    return true;
 }
 
 function getRandomTetromino() {
