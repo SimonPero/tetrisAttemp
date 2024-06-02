@@ -1,0 +1,20 @@
+body {
+    background-color: black;
+    color: white;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+}
+
+
+
+.tetris-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+}
+
+#user{
+    display: flex;
+    align-content: center;
+    justify-content: center;
+    height: 10%;
+}
