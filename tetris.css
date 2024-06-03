@@ -12,6 +12,13 @@ body {
     grid-template-columns: 1fr 1fr 1fr;
 }
 
+#future-blocks{
+    margin-left: 10px;
+}
+#saved-block{
+margin-right: 10px;
+}
+
 #user{
     display: flex;
     align-content: center;
