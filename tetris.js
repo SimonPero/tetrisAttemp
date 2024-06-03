@@ -276,7 +276,6 @@ function startGame() {
                     drawTetromino(block, 0, 0, contextPrincipal);
                     drawTetromino(block_saved, 0, 0, contextSaved)
                     coolDown = 1
-
                 }
                 break;
         }
