@@ -26,64 +26,9 @@ for (var y = 0; y <= canvasHeight; y += cellHeight) {
 
 context.stroke();
 
-const square = {
-    matrix: [
-        [1, 1],
-        [1, 1]
-    ],
-    height: 2
-};
-const stick = {
-    matrix: [
-        [1],
-        [1],
-        [1],
-        [1]
-    ],
-    height: 4
-};
-const z = {
-    matrix: [
-        [1, 1, 0],
-        [0, 1, 1]
-    ],
-    height: 2
-};
-const reverse_z = {
-    matrix: [
-        [0, 1, 1],
-        [1, 1, 0]
-    ],
-    height: 2
-};
-const t = {
-    matrix: [
-        [0, 1, 0],
-        [1, 1, 1]
-    ],
-    height: 2
-};
-const l = {
-    matrix: [
-        [1, 0],
-        [1, 0],
-        [1, 1]
-    ],
-    height: 3
-};
-const reverse_l = {
-    matrix: [
-        [0, 1],
-        [0, 1],
-        [1, 1]
-    ],
-    height: 3
-};
 let block = {
     matrix: Array.from({ length: 24 }, () => Array(10).fill(0)),
 };
-
-const tetrominos = [square, stick, z, reverse_z, t, l, reverse_l];
 
 const cellSize = 20; // Tamaño de cada celda
 
@@ -166,14 +111,82 @@ function markVisited(matrix) {
         }
     }
 }
+
+function getShape() {
+    const shapes = [
+        [[1], [1], [1], [1]],
+        [
+            [1, 1, 0],
+            [0, 1, 1]
+        ],
+        [
+            [0, 1, 1],
+            [1, 1, 0]
+        ],
+        [
+            [1, 1],
+            [1, 1]
+        ],
+        [
+            [1, 0],
+            [1, 0],
+            [1, 1]
+        ],
+        [
+            [0, 1],
+            [0, 1],
+            [1, 1]
+        ],
+        [
+            [0, 1, 0],
+            [1, 1, 1]
+        ]
+    ];
+    return shapes[Math.floor(Math.random() * shapes.length)];
+}
+
 function startGame() {
     let currentY = 0;
-    let piece = getRandomTetromino();
+    let currentX = 4;
+    let piece = getShape();
+
+    document.addEventListener("keyup", (event) => {
+        switch (event.key) {
+            case "ArrowLeft":
+                if (canMove(piece, currentY, currentX - 1)) {
+                    markVisited(block.matrix);
+                    deleteTetromino(block, 0, 0);
+                    currentX -= 1;
+                    insertMatrix(block.matrix, piece, currentY, currentX);
+                    drawTetromino(block, 0, 0);
+                }
+                break;
+            case "ArrowRight":
+                if (canMove(piece, currentY, currentX + 1)) {
+                    markVisited(block.matrix);
+                    deleteTetromino(block, 0, 0);
+                    currentX += 1;
+                    insertMatrix(block.matrix, piece, currentY, currentX);
+                    drawTetromino(block, 0, 0);
+                }
+                break;
+            case "ArrowDown":
+                if (canMove(piece, currentY + 1, currentX)) {
+                    markVisited(block.matrix);
+                    deleteTetromino(block, 0, 0);
+                    currentY += 1;
+                    insertMatrix(block.matrix, piece, currentY, currentX);
+                    drawTetromino(block, 0, 0);
+                }
+                break;
+        }
+    });
+
     setInterval(function () {
         let colition = detectCollisions(block.matrix)
-        if(colition){
+        if (colition) {
             markOld(block.matrix)
-            piece = getRandomTetromino();
+            piece = getShape();
             currentY = 0
         }
         if (currentY > 0) {
@@ -182,21 +195,22 @@ function startGame() {
                 deleteTetromino(block, 0, 0);
             }
         }
-        insertMatrix(block.matrix, piece.matrix, currentY, 0);
+        insertMatrix(block.matrix, piece, currentY, currentX);
         drawTetromino(block, 0, 0);
-        if (canMove(piece.matrix, currentY + 1, 0)) {
+        if (canMove(piece, currentY + 1, currentX)) {
             currentY += 1;
         } else {
             markOld(block.matrix);
-            piece = getRandomTetromino();
+            piece = getShape();
             currentY = 0;
-            if (!canMove(piece.matrix, currentY, 0)) {
-                // Game Over
+            currentX = 4;
+            if (!canMove(piece, currentY, currentX)) {
+                // Game Over //revisar
                 alert("Game Over");
                 clearInterval(this);
             }
         }
-    }, 100);
+    }, 1000);
 }
 
 function markOld(matrix) {
@@ -211,10 +225,7 @@ function markOld(matrix) {
 
 function checkCollision(matrix, row, col) {
     const directions = [
-        { dr: -1, dc: 0 }, // Arriba
         { dr: 1, dc: 0 },  // Abajo
-        { dr: 0, dc: -1 }, // Izquierda
-        { dr: 0, dc: 1 }   // Derecha
     ];
 
     for (const { dr, dc } of directions) {
@@ -245,16 +256,18 @@ function canMove(matrix, offsetY, offsetX) {
             if (matrix[row][col]) {
                 let newX = col + offsetX;
                 let newY = row + offsetY;
-                if (newY >= block.matrix.length || newX < 0 || newX >= block.matrix[0].length || block.matrix[newY][newX] === 2) {
+
+                // Verificar si la nueva posición está fuera de los límites del tablero
+                if (newY >= block.matrix.length || newX < 0 || newX >= block.matrix[0].length) {
+                    return false;
+                }
+
+                // Verificar si hay un 2 en la nueva posición
+                if (block.matrix[newY][newX] === 2) {
                     return false;
                 }
             }
         }
     }
     return true;
-}
-
-function getRandomTetromino() {
-    const randomIndex = Math.floor(Math.random() * tetrominos.length);
-    return tetrominos[randomIndex];
 }
