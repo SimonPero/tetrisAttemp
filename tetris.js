@@ -150,7 +150,7 @@ function startGame() {
     let currentX = 4;
     let piece = getShape();
 
-    document.addEventListener("keyup", (event) => {
+    document.addEventListener("keydown", (event) => {
         switch (event.key) {
             case "ArrowLeft":
                 if (canMove(piece, currentY, currentX - 1)) {
@@ -162,7 +162,7 @@ function startGame() {
                 }
                 break;
             case "ArrowRight":
-                if (canMove(piece, currentY, currentX + 1)) {
+                if (canMove(piece, currentY, currentX +1 )) {
                     markVisited(block.matrix);
                     deleteTetromino(block, 0, 0);
                     currentX += 1;
@@ -210,7 +210,7 @@ function startGame() {
                 clearInterval(this);
             }
         }
-    }, 1000);
+    }, 900);
 }
 
 function markOld(matrix) {
