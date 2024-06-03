@@ -139,7 +139,6 @@ function bfs2(matrix, startRow, startCol) {
     ];
     queue.push({ row: startRow, col: startCol });
     matrix[startRow][startCol] = 0; // Marcamos como visitado
-
     while (queue.length > 0) {
         const { row, col } = queue.shift();
         for (const { dr, dc } of directions) {
