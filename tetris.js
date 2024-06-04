@@ -1,3 +1,4 @@
+let puntos = 0;
 //canvas-principal
 let canvasPrincipal = document.getElementById("canvas");
 let contextPrincipal = canvasPrincipal.getContext("2d");
@@ -198,14 +199,69 @@ function getShape() {
 function startGame() {
     let currentY = 0;
     let currentX = 4;
+    let interval = 1000;
+    let level = 50; 
+    let intervalId;
+
+    function gameLoop() {
+        let collision = detectCollisions(block.matrix);
+        if (puntos >= level) {
+            level += 50;
+            if(interval !==100){
+                interval = interval - 100;
+            }
+            clearInterval(intervalId);
+            intervalId = setInterval(gameLoop, interval); // Reinicia el intervalo con el nuevo valor
+        }
+        if (collision) {
+            markOld(block.matrix);
+            block.matrix = eliminarFilasCompletas(block.matrix);
+            piece = getNextPiece();
+            addPieceToQueue();
+            currentY = 0;
+            currentX = 4;
+            coolDown = 0;
+            if (!canMove(piece, currentY, currentX)) {
+                // Game Over
+                alert("Game Over");
+                clearInterval(intervalId);
+            }
+        }
+        if (currentY > 0) {
+            markVisited(block.matrix);
+            if (currentY > 1) {
+                deleteTetromino(block, 0, 0, contextPrincipal);
+            }
+        }
+        insertMatrix(block.matrix, piece, currentY, currentX);
+        drawTetromino(block, 0, 0, contextPrincipal);
+        if (canMove(piece, currentY + 1, currentX)) {
+            currentY += 1;
+        } else {
+            markOld(block.matrix);
+            block.matrix = eliminarFilasCompletas(block.matrix);
+            piece = getNextPiece();
+            addPieceToQueue();
+            currentY = 0;
+            currentX = 4;
+            coolDown = 0;
+            if (!canMove(piece, currentY, currentX)) {
+                // Game Over
+                alert("Game Over");
+                clearInterval(intervalId);
+            }
+        }
+    }
+
     addPieceToQueue();
     addPieceToQueue();
     addPieceToQueue();
     addPieceToQueue();
     let piece = getNextPiece();
-    let coolDown = 0
+    let coolDown = 0;
     let savedPiece = null;
-    drawQueue()
+    drawQueue();
+
     document.addEventListener("keydown", (event) => {
         switch (event.key) {
             case "ArrowLeft":
@@ -254,75 +310,34 @@ function startGame() {
                     savedPiece = temp;
                     markVisited(block.matrix);
                     markVisited(block_saved.matrix);
-                    deleteTetromino(block_saved, 0, 0, contextSaved)
+                    deleteTetromino(block_saved, 0, 0, contextSaved);
                     deleteTetromino(block, 0, 0, contextPrincipal);
                     currentY = 0;
                     currentX = 4;
                     insertMatrix(block_saved.matrix, savedPiece, 1, 2);
                     drawTetromino(block, 0, 0, contextPrincipal);
-                    drawTetromino(block_saved, 0, 0, contextSaved)
-                    coolDown = 1
+                    drawTetromino(block_saved, 0, 0, contextSaved);
+                    coolDown = 1;
                 } else if (coolDown === 0) {
                     savedPiece = piece;
                     piece = getNextPiece();
                     markVisited(block.matrix);
                     markVisited(block_saved.matrix);
-                    deleteTetromino(block_saved, 0, 0, contextSaved)
+                    deleteTetromino(block_saved, 0, 0, contextSaved);
                     deleteTetromino(block, 0, 0, contextPrincipal);
                     currentY = 0;
                     currentX = 4;
                     insertMatrix(block_saved.matrix, savedPiece, 1, 2);
                     drawTetromino(block, 0, 0, contextPrincipal);
-                    drawTetromino(block_saved, 0, 0, contextSaved)
-                    coolDown = 1
+                    drawTetromino(block_saved, 0, 0, contextSaved);
+                    coolDown = 1;
                 }
                 break;
         }
     });
 
-    setInterval(function () {
-        let collision = detectCollisions(block.matrix);
-        if (collision) {
-            markOld(block.matrix);
-            block.matrix = eliminarFilasCompletas(block.matrix);
-            piece = getNextPiece();
-            addPieceToQueue();
-            currentY = 0;
-            currentX = 4;
-            coolDown = 0
-            if (!canMove(piece, currentY, currentX)) {
-                // Game Over
-                alert("Game Over");
-                clearInterval(this);
-            }
-        }
-        if (currentY > 0) {
-            markVisited(block.matrix);
-            if (currentY > 1) {
-                deleteTetromino(block, 0, 0, contextPrincipal);
-            }
-        }
-        insertMatrix(block.matrix, piece, currentY, currentX);
-        drawTetromino(block, 0, 0, contextPrincipal);
-        if (canMove(piece, currentY + 1, currentX)) {
-            currentY += 1;
-        } else {
-            markOld(block.matrix);
-            block.matrix = eliminarFilasCompletas(block.matrix);
-            piece = getNextPiece();
-            addPieceToQueue();
-            currentY = 0;
-            currentX = 4;
-            coolDown = 0
-            if (!canMove(piece, currentY, currentX)) {
-                // Game Over
-                alert("Game Over");
-                clearInterval(this);
-            }
-        }
-    }, 1000);
+    intervalId = setInterval(gameLoop, interval);
 }
-
 function markOld(matrix) {
     for (let i = 0; i < matrix.length; i++) {
         for (let j = 0; j < matrix[i].length; j++) {
@@ -420,8 +435,10 @@ function eliminarFilasCompletas(matrix) {
     let rowsDeleted = rows - newMatrix.length;
     // Agregar filas vacías al principio de la matriz
     for (let i = 0; i < rowsDeleted; i++) {
+        puntos += 50
         newMatrix.unshift(Array(cols).fill(0));
     }
+    document.getElementById("points").innerHTML = puntos;
     return newMatrix;
 }
 
