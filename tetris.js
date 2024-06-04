@@ -200,13 +200,13 @@ function startGame() {
     let currentY = 0;
     let currentX = 4;
     let interval = 1000;
-    let level = 50; 
+    let level = 300; 
     let intervalId;
 
     function gameLoop() {
         let collision = detectCollisions(block.matrix);
         if (puntos >= level) {
-            level += 50;
+            level += 300;
             if(interval !==100){
                 interval = interval - 100;
             }
