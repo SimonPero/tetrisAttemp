@@ -47,7 +47,6 @@ function drawGrid(canvasHeight, canvasWidth, cellWidth, cellHeight, context) {
     context.stroke();
 }
 
-
 let block = {
     matrix: Array.from({ length: 24 }, () => Array(10).fill(0)),
 };
