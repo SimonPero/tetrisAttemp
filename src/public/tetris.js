@@ -1,4 +1,5 @@
 let puntos = 0;
+const cellSize = 20;
 //canvas-principal
 let canvasPrincipal = document.getElementById("canvas");
 let contextPrincipal = canvasPrincipal.getContext("2d");
@@ -28,18 +29,30 @@ let canvasWidthList = canvasList.width;
 let canvasHeightList = canvasList.height;
 let cellWidthList = 20;
 let cellHeightList = 20;
-drawGrid(canvasHeightPrincipal, canvasWidthPrincipal, cellWidthPrincipal, cellHeightPrincipal, contextPrincipal)
-drawGrid(canvasHeightSaved, canvasWidthSaved, cellWidthSaved, cellHeightSaved, contextSaved)
-drawGrid(canvasHeightList, canvasWidthList, cellWidthList, cellHeightList, contextList)
 
-function drawGrid(canvasHeight, canvasWidth, cellWidth, cellHeight, context) {
-    for (var x = 0; x <= canvasWidth; x += cellWidth) {
+drawGrids()
+
+function drawGrids() {
+    drawGrid(canvasHeightPrincipal, canvasWidthPrincipal, contextPrincipal, cellSize)
+    drawGrid(canvasHeightSaved, canvasWidthSaved, contextSaved, cellSize)
+    drawGrid(canvasHeightList, canvasWidthList, contextList, cellSize)
+
+}
+
+function reseteCanvases(canvasHeightPrincipal, canvasWidthPrincipal, contextPrincipal, canvasHeightSaved, canvasWidthSaved, contextSaved, canvasHeightList, canvasWidthList, contextList) {
+    contextPrincipal.clearRect(0, 0, canvasWidthPrincipal, canvasHeightPrincipal)
+    contextList.clearRect(0, 0, canvasWidthSaved, canvasHeightSaved)
+    contextSaved.clearRect(0, 0, canvasWidthList, canvasHeightList)
+}
+
+function drawGrid(canvasHeight, canvasWidth, context, cellSize) {
+    for (var x = 0; x <= canvasWidth; x += cellSize) {
         context.moveTo(x, 0);
         context.lineTo(x, canvasHeight);
     }
 
     // Dibujar líneas horizontales
-    for (var y = 0; y <= canvasHeight; y += cellHeight) {
+    for (var y = 0; y <= canvasHeight; y += cellSize) {
         context.moveTo(0, y);
         context.lineTo(canvasWidth, y);
     }
@@ -50,13 +63,25 @@ function drawGrid(canvasHeight, canvasWidth, cellWidth, cellHeight, context) {
 let block = {
     matrix: Array.from({ length: 24 }, () => Array(10).fill(0)),
 };
+
+function resetLogicMatrixes() {
+    block = {
+        matrix: Array.from({ length: 24 }, () => Array(10).fill(0)),
+    };
+    block_saved = {
+        matrix: Array.from({ length: 6 }, () => Array(6).fill(0)),
+    };
+    block_list = {
+        matrix: Array.from({ length: 11 }, () => Array(4).fill(0)),
+    };
+}
+
 let block_saved = {
     matrix: Array.from({ length: 6 }, () => Array(6).fill(0)),
 };
 let block_list = {
     matrix: Array.from({ length: 11 }, () => Array(4).fill(0)),
 };
-const cellSize = 20; // Tamaño de cada celda
 
 let pieceQueue = [];
 const maxQueueSize = 4;
@@ -196,17 +221,20 @@ function getShape() {
 }
 
 function startGame() {
+    const startButton = document.getElementById("startButton");
+    startButton.disabled = true;
+    puntos = 0;
     let currentY = 0;
     let currentX = 4;
     let interval = 1000;
-    let level = 300; 
+    let level = 300;
     let intervalId;
 
     function gameLoop() {
         let collision = detectCollisions(block.matrix);
         if (puntos >= level) {
             level += 300;
-            if(interval !==100){
+            if (interval !== 100) {
                 interval = interval - 100;
             }
             clearInterval(intervalId);
@@ -222,7 +250,12 @@ function startGame() {
             coolDown = 0;
             if (!canMove(piece, currentY, currentX)) {
                 // Game Over
+                startButton.disabled = false;
                 alert("Game Over");
+                reseteCanvases(canvasHeightPrincipal, canvasWidthPrincipal, contextPrincipal, canvasHeightSaved, canvasWidthSaved, contextSaved, canvasHeightList, canvasWidthList, contextList)
+                drawGrids()
+                resetLogicMatrixes()
+                savedPiece = null;
                 clearInterval(intervalId);
             }
         }
@@ -246,7 +279,13 @@ function startGame() {
             coolDown = 0;
             if (!canMove(piece, currentY, currentX)) {
                 // Game Over
+                startButton.disabled = false;
                 alert("Game Over");
+                reseteCanvases(canvasHeightPrincipal, canvasWidthPrincipal, contextPrincipal, canvasHeightSaved, canvasWidthSaved, contextSaved, canvasHeightList, canvasWidthList, contextList)
+                drawGrids()
+                resetLogicMatrixes()
+                savedPiece = null;
+                piece = null
                 clearInterval(intervalId);
             }
         }
