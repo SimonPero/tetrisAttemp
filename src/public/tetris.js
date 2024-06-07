@@ -7,9 +7,9 @@ contextPrincipal.lineWidth = 1;
 contextPrincipal.strokeStyle = "#FFFFFFFF";
 let canvasWidthPrincipal = canvasPrincipal.width;
 let canvasHeightPrincipal = canvasPrincipal.height;
-let cellWidthPrincipal = 20;
-let cellHeightPrincipal = 20;
-
+const tetrisPrincipal = {
+    context: contextPrincipal, canvasWidth: canvasWidthPrincipal, canvasHeight: canvasHeightPrincipal
+}
 //canvas-guardado
 let canvasSaved = document.getElementById("saved-block");
 let contextSaved = canvasSaved.getContext("2d");
@@ -17,9 +17,7 @@ contextSaved.lineWidth = 1;
 contextSaved.strokeStyle = "#FFFFFFFF";
 let canvasWidthSaved = canvasSaved.width;
 let canvasHeightSaved = canvasSaved.height;
-let cellWidthSaved = 20;
-let cellHeightSaved = 20;
-
+const tetrisSaved = { context: contextSaved, canvasWidth: canvasWidthSaved, canvasHeight: canvasHeightSaved }
 //canvas-lista
 let canvasList = document.getElementById("future-blocks");
 let contextList = canvasList.getContext("2d");
@@ -27,55 +25,12 @@ contextList.lineWidth = 1;
 contextList.strokeStyle = "#FFFFFFFF";
 let canvasWidthList = canvasList.width;
 let canvasHeightList = canvasList.height;
-let cellWidthList = 20;
-let cellHeightList = 20;
+const tetrisList = { context: contextList, canvasWidth: canvasWidthList, canvasHeight: canvasHeightList }
 
-drawGrids()
-
-function drawGrids() {
-    drawGrid(canvasHeightPrincipal, canvasWidthPrincipal, contextPrincipal, cellSize)
-    drawGrid(canvasHeightSaved, canvasWidthSaved, contextSaved, cellSize)
-    drawGrid(canvasHeightList, canvasWidthList, contextList, cellSize)
-
-}
-
-function reseteCanvases(canvasHeightPrincipal, canvasWidthPrincipal, contextPrincipal, canvasHeightSaved, canvasWidthSaved, contextSaved, canvasHeightList, canvasWidthList, contextList) {
-    contextPrincipal.clearRect(0, 0, canvasWidthPrincipal, canvasHeightPrincipal)
-    contextList.clearRect(0, 0, canvasWidthSaved, canvasHeightSaved)
-    contextSaved.clearRect(0, 0, canvasWidthList, canvasHeightList)
-}
-
-function drawGrid(canvasHeight, canvasWidth, context, cellSize) {
-    for (var x = 0; x <= canvasWidth; x += cellSize) {
-        context.moveTo(x, 0);
-        context.lineTo(x, canvasHeight);
-    }
-
-    // Dibujar líneas horizontales
-    for (var y = 0; y <= canvasHeight; y += cellSize) {
-        context.moveTo(0, y);
-        context.lineTo(canvasWidth, y);
-    }
-
-    context.stroke();
-}
-
+//matrices logicas de 0
 let block = {
     matrix: Array.from({ length: 24 }, () => Array(10).fill(0)),
 };
-
-function resetLogicMatrixes() {
-    block = {
-        matrix: Array.from({ length: 24 }, () => Array(10).fill(0)),
-    };
-    block_saved = {
-        matrix: Array.from({ length: 6 }, () => Array(6).fill(0)),
-    };
-    block_list = {
-        matrix: Array.from({ length: 11 }, () => Array(4).fill(0)),
-    };
-}
-
 let block_saved = {
     matrix: Array.from({ length: 6 }, () => Array(6).fill(0)),
 };
@@ -83,8 +38,32 @@ let block_list = {
     matrix: Array.from({ length: 11 }, () => Array(4).fill(0)),
 };
 
-let pieceQueue = [];
-const maxQueueSize = 4;
+//draw tetris grids 
+
+drawGrids()
+
+function drawGrids() {
+    drawGrid(tetrisPrincipal, cellSize)
+    drawGrid(tetrisList, cellSize)
+    drawGrid(tetrisSaved, cellSize)
+
+}
+
+
+function drawGrid(tetrisCanvas, cellSize) {
+    for (var x = 0; x <= tetrisCanvas.canvasWidth; x += cellSize) {
+        tetrisCanvas.context.moveTo(x, 0);
+        tetrisCanvas.context.lineTo(x, tetrisCanvas.canvasHeight);
+    }
+
+    // Dibujar líneas horizontales
+    for (var y = 0; y <= tetrisCanvas.canvasHeight; y += cellSize) {
+        tetrisCanvas.context.moveTo(0, y);
+        tetrisCanvas.context.lineTo(tetrisCanvas.canvasWidth, y);
+    }
+
+    tetrisCanvas.context.stroke();
+}
 
 function drawQueue() {
     // Limpiar el canvas de la lista
@@ -95,10 +74,124 @@ function drawQueue() {
         let piece = pieceQueue[i];
         // Calcula la posición de la pieza en el canvas
         let offsetX = 0;
-        let offsetY = i * (cellHeightList * 4); // Asumiendo que cada pieza ocupa 4 celdas de altura
+        let offsetY = i * (cellSize * 4); // Asumiendo que cada pieza ocupa 4 celdas de altura
         drawTetromino({ matrix: piece }, offsetX, offsetY, contextList);
     }
 }
+
+function drawTetromino(tetromino, offsetX, offsetY, context) {
+    const matrix = tetromino.matrix;
+    for (let row = 0; row < matrix.length; row++) {
+        for (let col = 0; col < matrix[row].length; col++) {
+            if (matrix[row][col]) {
+                context.fillStyle = "red";
+            } else {
+                context.fillStyle = "black";
+            }
+            context.fillRect((col + offsetX) * cellSize, (row + offsetY) * cellSize, cellSize, cellSize);
+            context.strokeRect((col + offsetX) * cellSize, (row + offsetY) * cellSize, cellSize, cellSize);
+        }
+    }
+}
+
+
+//Limpiar el canvas
+function reseteCanvases(canvasHeightPrincipal, canvasWidthPrincipal, contextPrincipal, canvasHeightSaved, canvasWidthSaved, contextSaved, canvasHeightList, canvasWidthList, contextList) {
+    contextPrincipal.clearRect(0, 0, canvasWidthPrincipal, canvasHeightPrincipal)
+    contextList.clearRect(0, 0, canvasWidthSaved, canvasHeightSaved)
+    contextSaved.clearRect(0, 0, canvasWidthList, canvasHeightList)
+}
+
+function deleteTetromino(tetromino, offsetX, offsetY, context) {
+    const matrix = tetromino.matrix;
+    for (let row = 0; row < matrix.length; row++) {
+        for (let col = 0; col < matrix[row].length; col++) {
+            context.fillStyle = "black";
+            context.fillRect((col + offsetX) * cellSize, (row + offsetY) * cellSize, cellSize, cellSize);
+            context.strokeRect((col + offsetX) * cellSize, (row + offsetY) * cellSize, cellSize, cellSize);
+        }
+    }
+}
+
+
+//Colisiones de piezas
+function checkCollision(matrix, row, col) {
+    const directions = [
+        { dr: 1, dc: 0 },  // Abajo
+    ];
+    for (const { dr, dc } of directions) {
+        const newRow = row + dr;
+        const newCol = col + dc;
+        if (newRow >= 0 && newRow < matrix.length && newCol >= 0 && newCol < matrix[0].length && matrix[newRow][newCol] === 2) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function detectCollisions(matrix) {
+    for (let row = 0; row < matrix.length; row++) {
+        for (let col = 0; col < matrix[row].length; col++) {
+            if (matrix[row][col] === 1 && checkCollision(matrix, row, col)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+function canMove(matrix, offsetY, offsetX) {
+    for (let row = 0; row < matrix.length; row++) {
+        for (let col = 0; col < matrix[row].length; col++) {
+            if (matrix[row][col]) {
+                let newX = col + offsetX;
+                let newY = row + offsetY;
+                // Check if the new position is out of bounds
+                if (newY >= block.matrix.length || newX < 0 || newX >= block.matrix[0].length) {
+                    return false;
+                }
+                // Check if the new position is occupied
+                if (block.matrix[newY][newX] === 2) {
+                    return false;
+                }
+            }
+        }
+    }
+    return true;
+}
+
+//Rotacion de piezas
+function rotacion(pieza, posX, posY) {
+    if (pieza.length === 2 && pieza[0].length === 2) {
+        return pieza; // No rotation needed for square
+    }
+    let filas = pieza.length;
+    let columnas = pieza[0].length;
+    let nuevo = Array.from({ length: columnas }, () => Array(filas).fill(0));
+
+    for (let c = 0; c < columnas; c++) {
+        for (let f = 0; f < filas; f++) {
+            nuevo[c][filas - 1 - f] = pieza[f][c];
+        }
+    }
+
+    // Check if the rotated piece is out of bounds and adjust if necessary
+    let offsetX = 0;
+    if (posX + nuevo[0].length > block.matrix[0].length) {
+        offsetX = block.matrix[0].length - (posX + nuevo[0].length);
+    } else if (posX < 0) {
+        offsetX = -posX;
+    }
+
+    if (canMove(nuevo, posY, posX + offsetX)) {
+        return { pieza: nuevo, offsetX };
+    }
+    return { pieza, offsetX: 0 };
+}
+
+//Lista de las proximas piezas a usar
+let pieceQueue = [];
+const maxQueueSize = 4;
 
 function addPieceToQueue() {
     if (pieceQueue.length >= maxQueueSize) {
@@ -118,32 +211,8 @@ function getNextPiece() {
     }
 }
 
-function drawTetromino(tetromino, offsetX, offsetY, context) {
-    const matrix = tetromino.matrix;
-    for (let row = 0; row < matrix.length; row++) {
-        for (let col = 0; col < matrix[row].length; col++) {
-            if (matrix[row][col]) {
-                context.fillStyle = "red";
-            } else {
-                context.fillStyle = "black";
-            }
-            context.fillRect((col + offsetX) * cellSize, (row + offsetY) * cellSize, cellSize, cellSize);
-            context.strokeRect((col + offsetX) * cellSize, (row + offsetY) * cellSize, cellSize, cellSize);
-        }
-    }
-}
 
-function deleteTetromino(tetromino, offsetX, offsetY, context) {
-    const matrix = tetromino.matrix;
-    for (let row = 0; row < matrix.length; row++) {
-        for (let col = 0; col < matrix[row].length; col++) {
-            context.fillStyle = "black";
-            context.fillRect((col + offsetX) * cellSize, (row + offsetY) * cellSize, cellSize, cellSize);
-            context.strokeRect((col + offsetX) * cellSize, (row + offsetY) * cellSize, cellSize, cellSize);
-        }
-    }
-}
-
+//Modificacion de matrices logicas
 function insertMatrix(bigMatrix, smallMatrix, startRow, startCol) {
     for (let i = 0; i < smallMatrix.length; i++) {
         for (let j = 0; j < smallMatrix[i].length; j++) {
@@ -187,6 +256,7 @@ function markVisited(matrix) {
     }
 }
 
+//Forma de obtener piezas randoms
 function getShape() {
     const shapes = [
         [[1], [1], [1], [1]],
@@ -220,6 +290,8 @@ function getShape() {
     return shapes[Math.floor(Math.random() * shapes.length)];
 }
 
+
+//funcion para iniciar el juego
 function startGame() {
     const startButton = document.getElementById("startButton");
     startButton.disabled = true;
@@ -230,6 +302,7 @@ function startGame() {
     let level = 300;
     let intervalId;
 
+    //intervalo de tiempo apra la caida de las piezas
     function gameLoop() {
         let collision = detectCollisions(block.matrix);
         if (puntos >= level) {
@@ -252,11 +325,8 @@ function startGame() {
                 // Game Over
                 startButton.disabled = false;
                 alert("Game Over");
-                reseteCanvases(canvasHeightPrincipal, canvasWidthPrincipal, contextPrincipal, canvasHeightSaved, canvasWidthSaved, contextSaved, canvasHeightList, canvasWidthList, contextList)
-                drawGrids()
-                resetLogicMatrixes()
-                savedPiece = null;
                 clearInterval(intervalId);
+                location.reload();
             }
         }
         if (currentY > 0) {
@@ -281,12 +351,8 @@ function startGame() {
                 // Game Over
                 startButton.disabled = false;
                 alert("Game Over");
-                reseteCanvases(canvasHeightPrincipal, canvasWidthPrincipal, contextPrincipal, canvasHeightSaved, canvasWidthSaved, contextSaved, canvasHeightList, canvasWidthList, contextList)
-                drawGrids()
-                resetLogicMatrixes()
-                savedPiece = null;
-                piece = null
                 clearInterval(intervalId);
+                location.reload();
             }
         }
     }
@@ -300,6 +366,7 @@ function startGame() {
     let savedPiece = null;
     drawQueue();
 
+    //Movimientos permitidos del jugador
     document.addEventListener("keydown", (event) => {
         switch (event.key) {
             case "ArrowLeft":
@@ -376,6 +443,8 @@ function startGame() {
 
     intervalId = setInterval(gameLoop, interval);
 }
+
+//Solidificar las piezas 
 function markOld(matrix) {
     for (let i = 0; i < matrix.length; i++) {
         for (let j = 0; j < matrix[i].length; j++) {
@@ -386,80 +455,7 @@ function markOld(matrix) {
     }
 }
 
-function checkCollision(matrix, row, col) {
-    const directions = [
-        { dr: 1, dc: 0 },  // Abajo
-    ];
-    for (const { dr, dc } of directions) {
-        const newRow = row + dr;
-        const newCol = col + dc;
-        if (newRow >= 0 && newRow < matrix.length && newCol >= 0 && newCol < matrix[0].length && matrix[newRow][newCol] === 2) {
-            return true;
-        }
-    }
-    return false;
-}
-
-function detectCollisions(matrix) {
-    for (let row = 0; row < matrix.length; row++) {
-        for (let col = 0; col < matrix[row].length; col++) {
-            if (matrix[row][col] === 1 && checkCollision(matrix, row, col)) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-function canMove(matrix, offsetY, offsetX) {
-    for (let row = 0; row < matrix.length; row++) {
-        for (let col = 0; col < matrix[row].length; col++) {
-            if (matrix[row][col]) {
-                let newX = col + offsetX;
-                let newY = row + offsetY;
-                // Check if the new position is out of bounds
-                if (newY >= block.matrix.length || newX < 0 || newX >= block.matrix[0].length) {
-                    return false;
-                }
-                // Check if the new position is occupied
-                if (block.matrix[newY][newX] === 2) {
-                    return false;
-                }
-            }
-        }
-    }
-    return true;
-}
-
-
-function rotacion(pieza, posX, posY) {
-    if (pieza.length === 2 && pieza[0].length === 2) {
-        return pieza; // No rotation needed for square
-    }
-    let filas = pieza.length;
-    let columnas = pieza[0].length;
-    let nuevo = Array.from({ length: columnas }, () => Array(filas).fill(0));
-
-    for (let c = 0; c < columnas; c++) {
-        for (let f = 0; f < filas; f++) {
-            nuevo[c][filas - 1 - f] = pieza[f][c];
-        }
-    }
-
-    // Check if the rotated piece is out of bounds and adjust if necessary
-    let offsetX = 0;
-    if (posX + nuevo[0].length > block.matrix[0].length) {
-        offsetX = block.matrix[0].length - (posX + nuevo[0].length);
-    } else if (posX < 0) {
-        offsetX = -posX;
-    }
-
-    if (canMove(nuevo, posY, posX + offsetX)) {
-        return { pieza: nuevo, offsetX };
-    }
-    return { pieza, offsetX: 0 };
-}
-
+//Eliminar filas de matriz y añadir puntos
 function eliminarFilasCompletas(matrix) {
     let rows = matrix.length;
     let cols = matrix[0].length;
