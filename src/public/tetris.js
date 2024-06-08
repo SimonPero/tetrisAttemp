@@ -1,5 +1,18 @@
+import DrawUi from "./tetris/tetrisUi/drawUi.js";
+import ColisionLogic from "./tetris/tetrisLogic/colisionsLogic.js";
+import PiecesListLogic from "./tetris/tetrisLogic/futurePiecesLogic.js";
+import MatrixLogic from "./tetris/tetrisLogic/matrixLogic.js";
+import DeleteRowLogic from "./tetris/tetrisLogic/deleteRowsLogic.js";
+const deleteRowManager = new DeleteRowLogic();
+const matrixManager = new MatrixLogic();
+const piecesListManager = new PiecesListLogic();
+const colosionManager = new ColisionLogic();
+const drawManager = new DrawUi();
+
+//valores generales
 let puntos = 0;
 const cellSize = 20;
+
 //canvas-principal
 let canvasPrincipal = document.getElementById("canvas");
 let contextPrincipal = canvasPrincipal.getContext("2d");
@@ -10,6 +23,7 @@ let canvasHeightPrincipal = canvasPrincipal.height;
 const tetrisPrincipal = {
     context: contextPrincipal, canvasWidth: canvasWidthPrincipal, canvasHeight: canvasHeightPrincipal
 }
+
 //canvas-guardado
 let canvasSaved = document.getElementById("saved-block");
 let contextSaved = canvasSaved.getContext("2d");
@@ -18,6 +32,7 @@ contextSaved.strokeStyle = "#FFFFFFFF";
 let canvasWidthSaved = canvasSaved.width;
 let canvasHeightSaved = canvasSaved.height;
 const tetrisSaved = { context: contextSaved, canvasWidth: canvasWidthSaved, canvasHeight: canvasHeightSaved }
+
 //canvas-lista
 let canvasList = document.getElementById("future-blocks");
 let contextList = canvasList.getContext("2d");
@@ -34,265 +49,16 @@ let block = {
 let block_saved = {
     matrix: Array.from({ length: 6 }, () => Array(6).fill(0)),
 };
-let block_list = {
-    matrix: Array.from({ length: 11 }, () => Array(4).fill(0)),
-};
-
-//draw tetris grids 
-
-drawGrids()
-
-function drawGrids() {
-    drawGrid(tetrisPrincipal, cellSize)
-    drawGrid(tetrisList, cellSize)
-    drawGrid(tetrisSaved, cellSize)
-
-}
-
-
-function drawGrid(tetrisCanvas, cellSize) {
-    for (var x = 0; x <= tetrisCanvas.canvasWidth; x += cellSize) {
-        tetrisCanvas.context.moveTo(x, 0);
-        tetrisCanvas.context.lineTo(x, tetrisCanvas.canvasHeight);
-    }
-
-    // Dibujar líneas horizontales
-    for (var y = 0; y <= tetrisCanvas.canvasHeight; y += cellSize) {
-        tetrisCanvas.context.moveTo(0, y);
-        tetrisCanvas.context.lineTo(tetrisCanvas.canvasWidth, y);
-    }
-
-    tetrisCanvas.context.stroke();
-}
-
-function drawQueue() {
-    // Limpiar el canvas de la lista
-    contextList.clearRect(0, 0, canvasWidthList, canvasHeightList);
-
-    // Dibujar cada pieza en la cola
-    for (let i = 0; i < pieceQueue.length; i++) {
-        let piece = pieceQueue[i];
-        // Calcula la posición de la pieza en el canvas
-        let offsetX = 0;
-        let offsetY = i * (cellSize * 4); // Asumiendo que cada pieza ocupa 4 celdas de altura
-        drawTetromino({ matrix: piece }, offsetX, offsetY, contextList);
-    }
-}
-
-function drawTetromino(tetromino, offsetX, offsetY, context) {
-    const matrix = tetromino.matrix;
-    for (let row = 0; row < matrix.length; row++) {
-        for (let col = 0; col < matrix[row].length; col++) {
-            if (matrix[row][col]) {
-                context.fillStyle = "red";
-            } else {
-                context.fillStyle = "black";
-            }
-            context.fillRect((col + offsetX) * cellSize, (row + offsetY) * cellSize, cellSize, cellSize);
-            context.strokeRect((col + offsetX) * cellSize, (row + offsetY) * cellSize, cellSize, cellSize);
-        }
-    }
-}
-
-
-//Limpiar el canvas
-function reseteCanvases(canvasHeightPrincipal, canvasWidthPrincipal, contextPrincipal, canvasHeightSaved, canvasWidthSaved, contextSaved, canvasHeightList, canvasWidthList, contextList) {
-    contextPrincipal.clearRect(0, 0, canvasWidthPrincipal, canvasHeightPrincipal)
-    contextList.clearRect(0, 0, canvasWidthSaved, canvasHeightSaved)
-    contextSaved.clearRect(0, 0, canvasWidthList, canvasHeightList)
-}
-
-function deleteTetromino(tetromino, offsetX, offsetY, context) {
-    const matrix = tetromino.matrix;
-    for (let row = 0; row < matrix.length; row++) {
-        for (let col = 0; col < matrix[row].length; col++) {
-            context.fillStyle = "black";
-            context.fillRect((col + offsetX) * cellSize, (row + offsetY) * cellSize, cellSize, cellSize);
-            context.strokeRect((col + offsetX) * cellSize, (row + offsetY) * cellSize, cellSize, cellSize);
-        }
-    }
-}
-
-
-//Colisiones de piezas
-function checkCollision(matrix, row, col) {
-    const directions = [
-        { dr: 1, dc: 0 },  // Abajo
-    ];
-    for (const { dr, dc } of directions) {
-        const newRow = row + dr;
-        const newCol = col + dc;
-        if (newRow >= 0 && newRow < matrix.length && newCol >= 0 && newCol < matrix[0].length && matrix[newRow][newCol] === 2) {
-            return true;
-        }
-    }
-    return false;
-}
-
-function detectCollisions(matrix) {
-    for (let row = 0; row < matrix.length; row++) {
-        for (let col = 0; col < matrix[row].length; col++) {
-            if (matrix[row][col] === 1 && checkCollision(matrix, row, col)) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-function canMove(matrix, offsetY, offsetX) {
-    for (let row = 0; row < matrix.length; row++) {
-        for (let col = 0; col < matrix[row].length; col++) {
-            if (matrix[row][col]) {
-                let newX = col + offsetX;
-                let newY = row + offsetY;
-                // Check if the new position is out of bounds
-                if (newY >= block.matrix.length || newX < 0 || newX >= block.matrix[0].length) {
-                    return false;
-                }
-                // Check if the new position is occupied
-                if (block.matrix[newY][newX] === 2) {
-                    return false;
-                }
-            }
-        }
-    }
-    return true;
-}
-
-//Rotacion de piezas
-function rotacion(pieza, posX, posY) {
-    if (pieza.length === 2 && pieza[0].length === 2) {
-        return pieza; // No rotation needed for square
-    }
-    let filas = pieza.length;
-    let columnas = pieza[0].length;
-    let nuevo = Array.from({ length: columnas }, () => Array(filas).fill(0));
-
-    for (let c = 0; c < columnas; c++) {
-        for (let f = 0; f < filas; f++) {
-            nuevo[c][filas - 1 - f] = pieza[f][c];
-        }
-    }
-
-    // Check if the rotated piece is out of bounds and adjust if necessary
-    let offsetX = 0;
-    if (posX + nuevo[0].length > block.matrix[0].length) {
-        offsetX = block.matrix[0].length - (posX + nuevo[0].length);
-    } else if (posX < 0) {
-        offsetX = -posX;
-    }
-
-    if (canMove(nuevo, posY, posX + offsetX)) {
-        return { pieza: nuevo, offsetX };
-    }
-    return { pieza, offsetX: 0 };
-}
 
 //Lista de las proximas piezas a usar
 let pieceQueue = [];
 const maxQueueSize = 4;
 
-function addPieceToQueue() {
-    if (pieceQueue.length >= maxQueueSize) {
-        pieceQueue.shift(); // Elimina la pieza más antigua
-    }
-    pieceQueue.push(getShape());
-    drawQueue(); // Actualizar la visualización de la cola
-}
-
-function getNextPiece() {
-    if (pieceQueue.length > 0) {
-        const nextPiece = pieceQueue.shift(); // Retira la pieza más antigua
-        drawQueue(); // Actualizar la visualización de la cola
-        return nextPiece;
-    } else {
-        return getShape();
-    }
-}
-
-
-//Modificacion de matrices logicas
-function insertMatrix(bigMatrix, smallMatrix, startRow, startCol) {
-    for (let i = 0; i < smallMatrix.length; i++) {
-        for (let j = 0; j < smallMatrix[i].length; j++) {
-            if (smallMatrix[i][j]) {
-                bigMatrix[startRow + i][startCol + j] = smallMatrix[i][j];
-            }
-        }
-    }
-}
-
-function bfs2(matrix, startRow, startCol) {
-    const queue = [];
-    const directions = [
-        { dr: -1, dc: 0 },
-        { dr: 1, dc: 0 },
-        { dr: 0, dc: -1 },
-        { dr: 0, dc: 1 }
-    ];
-    queue.push({ row: startRow, col: startCol });
-    matrix[startRow][startCol] = 0; // Marcamos como visitado
-    while (queue.length > 0) {
-        const { row, col } = queue.shift();
-        for (const { dr, dc } of directions) {
-            const newRow = row + dr;
-            const newCol = col + dc;
-            if (newRow >= 0 && newRow < matrix.length && newCol >= 0 && newCol < matrix[0].length && matrix[newRow][newCol] === 1) {
-                matrix[newRow][newCol] = 0; // Marcamos como visitado
-                queue.push({ row: newRow, col: newCol });
-            }
-        }
-    }
-}
-
-function markVisited(matrix) {
-    for (let row = 0; row < matrix.length; row++) {
-        for (let col = 0; col < matrix[row].length; col++) {
-            if (matrix[row][col] === 1) {
-                bfs2(matrix, row, col);
-            }
-        }
-    }
-}
-
-//Forma de obtener piezas randoms
-function getShape() {
-    const shapes = [
-        [[1], [1], [1], [1]],
-        [
-            [1, 1, 0],
-            [0, 1, 1]
-        ],
-        [
-            [0, 1, 1],
-            [1, 1, 0]
-        ],
-        [
-            [1, 1],
-            [1, 1]
-        ],
-        [
-            [1, 0],
-            [1, 0],
-            [1, 1]
-        ],
-        [
-            [0, 1],
-            [0, 1],
-            [1, 1]
-        ],
-        [
-            [0, 1, 0],
-            [1, 1, 1]
-        ]
-    ];
-    return shapes[Math.floor(Math.random() * shapes.length)];
-}
-
+//draw tetris grids 
+drawManager.drawGrids(tetrisPrincipal, tetrisList, tetrisSaved, cellSize)
 
 //funcion para iniciar el juego
-function startGame() {
+export function startGame() {
     const startButton = document.getElementById("startButton");
     startButton.disabled = true;
     puntos = 0;
@@ -302,9 +68,9 @@ function startGame() {
     let level = 300;
     let intervalId;
 
-    //intervalo de tiempo apra la caida de las piezas
+    //intervalo de tiempo para la caida de las piezas
     function gameLoop() {
-        let collision = detectCollisions(block.matrix);
+        let collision = colosionManager.detectCollisions(block.matrix);
         if (puntos >= level) {
             level += 300;
             if (interval !== 100) {
@@ -314,97 +80,99 @@ function startGame() {
             intervalId = setInterval(gameLoop, interval); // Reinicia el intervalo con el nuevo valor
         }
         if (collision) {
-            markOld(block.matrix);
-            block.matrix = eliminarFilasCompletas(block.matrix);
-            piece = getNextPiece();
-            addPieceToQueue();
+            colosionManager.markOld(block.matrix);
+            block.matrix = deleteRowManager.eliminarFilasCompletas(block.matrix, puntos);
+            piece = piecesListManager.getNextPiece(tetrisList, pieceQueue, cellSize);
+            pieceQueue = piecesListManager.addPieceToQueue(pieceQueue, maxQueueSize, tetrisList, cellSize);
             currentY = 0;
             currentX = 4;
             coolDown = 0;
-            if (!canMove(piece, currentY, currentX)) {
+            if (!colosionManager.canMove(block, piece, currentY, currentX)) {
                 // Game Over
                 startButton.disabled = false;
                 alert("Game Over");
                 clearInterval(intervalId);
+                //cambiar a futuro cuando lo vaya a hostear para evitar peticiones
                 location.reload();
             }
         }
         if (currentY > 0) {
-            markVisited(block.matrix);
+            matrixManager.markVisited(block.matrix);
             if (currentY > 1) {
-                deleteTetromino(block, 0, 0, contextPrincipal);
+                drawManager.deleteTetromino(block, 0, 0, tetrisPrincipal, cellSize);
             }
         }
-        insertMatrix(block.matrix, piece, currentY, currentX);
-        drawTetromino(block, 0, 0, contextPrincipal);
-        if (canMove(piece, currentY + 1, currentX)) {
+        matrixManager.insertMatrix(block.matrix, piece, currentY, currentX);
+        drawManager.drawTetromino(block, 0, 0, tetrisPrincipal, cellSize);
+        if (colosionManager.canMove(block, piece, currentY + 1, currentX)) {
             currentY += 1;
         } else {
-            markOld(block.matrix);
-            block.matrix = eliminarFilasCompletas(block.matrix);
-            piece = getNextPiece();
-            addPieceToQueue();
+            colosionManager.markOld(block.matrix);
+            block.matrix = deleteRowManager.eliminarFilasCompletas(block.matrix, puntos);
+            piece = piecesListManager.getNextPiece(tetrisList, pieceQueue, cellSize);
+            pieceQueue = piecesListManager.addPieceToQueue(pieceQueue, maxQueueSize, tetrisList, cellSize);
             currentY = 0;
             currentX = 4;
             coolDown = 0;
-            if (!canMove(piece, currentY, currentX)) {
+            if (!colosionManager.canMove(block, piece, currentY, currentX)) {
                 // Game Over
                 startButton.disabled = false;
                 alert("Game Over");
                 clearInterval(intervalId);
+                //cambiar a futuro cuando lo vaya a hostear para evitar peticiones
                 location.reload();
             }
         }
     }
 
-    addPieceToQueue();
-    addPieceToQueue();
-    addPieceToQueue();
-    addPieceToQueue();
-    let piece = getNextPiece();
+    pieceQueue = piecesListManager.addPieceToQueue(pieceQueue, maxQueueSize, tetrisList, cellSize);
+    pieceQueue = piecesListManager.addPieceToQueue(pieceQueue, maxQueueSize, tetrisList, cellSize);
+    pieceQueue = piecesListManager.addPieceToQueue(pieceQueue, maxQueueSize, tetrisList, cellSize);
+    pieceQueue = piecesListManager.addPieceToQueue(pieceQueue, maxQueueSize, tetrisList, cellSize);
+    let piece = piecesListManager.getNextPiece(tetrisList, pieceQueue, cellSize);
     let coolDown = 0;
     let savedPiece = null;
-    drawQueue();
+    drawManager.drawQueue(tetrisList, pieceQueue, cellSize);
 
     //Movimientos permitidos del jugador
     document.addEventListener("keydown", (event) => {
         switch (event.key) {
             case "ArrowLeft":
-                if (canMove(piece, currentY, currentX - 1)) {
-                    markVisited(block.matrix);
-                    deleteTetromino(block, 0, 0, contextPrincipal);
+                if (colosionManager.canMove(block, piece, currentY, currentX - 1)) {
+                    matrixManager.markVisited(block.matrix);
+                    drawManager.deleteTetromino(block, 0, 0, tetrisPrincipal, cellSize);
                     currentX -= 1;
-                    insertMatrix(block.matrix, piece, currentY, currentX);
-                    drawTetromino(block, 0, 0, contextPrincipal);
+                    matrixManager.insertMatrix(block.matrix, piece, currentY, currentX);
+                    drawManager.drawTetromino(block, 0, 0, tetrisPrincipal, cellSize);
                 }
                 break;
             case "ArrowRight":
-                if (canMove(piece, currentY, currentX + 1)) {
-                    markVisited(block.matrix);
-                    deleteTetromino(block, 0, 0, contextPrincipal);
+                if (colosionManager.canMove(block, piece, currentY, currentX + 1)) {
+                    matrixManager.markVisited(block.matrix);
+                    drawManager.deleteTetromino(block, 0, 0, tetrisPrincipal, cellSize);
                     currentX += 1;
-                    insertMatrix(block.matrix, piece, currentY, currentX);
-                    drawTetromino(block, 0, 0, contextPrincipal);
+                    matrixManager.insertMatrix(block.matrix, piece, currentY, currentX);
+                    drawManager.drawTetromino(block, 0, 0, tetrisPrincipal, cellSize);
                 }
                 break;
             case "ArrowUp":
-                let { pieza: rotatedPiece, offsetX } = rotacion(piece, currentX, currentY);
-                if (canMove(rotatedPiece, currentY, currentX + offsetX)) {
-                    markVisited(block.matrix);
-                    deleteTetromino(block, 0, 0, contextPrincipal);
+                let { pieza: rotatedPiece, offsetX } = colosionManager.rotation(block.matrix, piece, currentX, currentY);
+                if (colosionManager.canMove(block, rotatedPiece, currentY, currentX + offsetX)) {
+                    matrixManager.markVisited(block.matrix);
+                    drawManager.deleteTetromino(block, 0, 0, tetrisPrincipal, cellSize);
                     piece = rotatedPiece;
                     currentX += offsetX;
-                    insertMatrix(block.matrix, piece, currentY, currentX);
-                    drawTetromino(block, 0, 0, contextPrincipal);
+                    matrixManager.insertMatrix(block.matrix, piece, currentY, currentX);
+                    drawManager.drawTetromino(block, 0, 0, tetrisPrincipal, cellSize);
                 }
                 break;
             case "ArrowDown":
-                if (canMove(piece, currentY + 1, currentX)) {
-                    markVisited(block.matrix);
-                    deleteTetromino(block, 0, 0, contextPrincipal);
+                if (colosionManager.canMove(block, piece, currentY + 1, currentX)) {
+                    matrixManager.markVisited(block.matrix);
+                    drawManager.deleteTetromino(block, 0, 0, tetrisPrincipal, cellSize);
                     currentY += 1;
-                    insertMatrix(block.matrix, piece, currentY, currentX);
-                    drawTetromino(block, 0, 0, contextPrincipal);
+                    matrixManager.insertMatrix(block.matrix, piece, currentY, currentX);
+                    drawManager.drawTetromino(block, 0, 0, tetrisPrincipal, cellSize);
                 }
                 break;
             case "c":
@@ -413,28 +181,28 @@ function startGame() {
                     let temp = piece;
                     piece = savedPiece;
                     savedPiece = temp;
-                    markVisited(block.matrix);
-                    markVisited(block_saved.matrix);
-                    deleteTetromino(block_saved, 0, 0, contextSaved);
-                    deleteTetromino(block, 0, 0, contextPrincipal);
+                    matrixManager.markVisited(block.matrix);
+                    matrixManager.markVisited(block_saved.matrix);
+                    drawManager.deleteTetromino(block_saved, 0, 0, tetrisSaved, cellSize);
+                    drawManager.deleteTetromino(block, 0, 0, tetrisPrincipal, cellSize);
                     currentY = 0;
                     currentX = 4;
-                    insertMatrix(block_saved.matrix, savedPiece, 1, 2);
-                    drawTetromino(block, 0, 0, contextPrincipal);
-                    drawTetromino(block_saved, 0, 0, contextSaved);
+                    matrixManager.insertMatrix(block_saved.matrix, savedPiece, 1, 2);
+                    drawManager.drawTetromino(block, 0, 0, tetrisPrincipal, cellSize);
+                    drawManager.drawTetromino(block_saved, 0, 0, tetrisSaved, cellSize);
                     coolDown = 1;
                 } else if (coolDown === 0) {
                     savedPiece = piece;
-                    piece = getNextPiece();
-                    markVisited(block.matrix);
-                    markVisited(block_saved.matrix);
-                    deleteTetromino(block_saved, 0, 0, contextSaved);
-                    deleteTetromino(block, 0, 0, contextPrincipal);
+                    piece = piecesListManager.getNextPiece(tetrisList, pieceQueue, cellSize);
+                    matrixManager.markVisited(block.matrix);
+                    matrixManager.markVisited(block_saved.matrix);
+                    drawManager.deleteTetromino(block_saved, 0, 0, tetrisSaved, cellSize);
+                    drawManager.deleteTetromino(block, 0, 0, tetrisPrincipal, cellSize);
                     currentY = 0;
                     currentX = 4;
-                    insertMatrix(block_saved.matrix, savedPiece, 1, 2);
-                    drawTetromino(block, 0, 0, contextPrincipal);
-                    drawTetromino(block_saved, 0, 0, contextSaved);
+                    matrixManager.insertMatrix(block_saved.matrix, savedPiece, 1, 2);
+                    drawManager.drawTetromino(block, 0, 0, tetrisPrincipal, cellSize);
+                    drawManager.drawTetromino(block_saved, 0, 0, tetrisSaved, cellSize);
                     coolDown = 1;
                 }
                 break;
@@ -444,38 +212,4 @@ function startGame() {
     intervalId = setInterval(gameLoop, interval);
 }
 
-//Solidificar las piezas 
-function markOld(matrix) {
-    for (let i = 0; i < matrix.length; i++) {
-        for (let j = 0; j < matrix[i].length; j++) {
-            if (matrix[i][j] === 1) {
-                matrix[i][j] = 2;
-            }
-        }
-    }
-}
-
-//Eliminar filas de matriz y añadir puntos
-function eliminarFilasCompletas(matrix) {
-    let rows = matrix.length;
-    let cols = matrix[0].length;
-    let newMatrix = [];
-    for (let r = 0; r < rows; r++) {
-        if (!isRowComplete(matrix[r])) {
-            newMatrix.push(matrix[r]);
-        }
-    }
-    // Calcular cuántas filas completas se eliminaron
-    let rowsDeleted = rows - newMatrix.length;
-    // Agregar filas vacías al principio de la matriz
-    for (let i = 0; i < rowsDeleted; i++) {
-        puntos += 50
-        newMatrix.unshift(Array(cols).fill(0));
-    }
-    document.getElementById("points").innerHTML = puntos;
-    return newMatrix;
-}
-
-function isRowComplete(row) {
-    return row.every(cell => cell === 2);
-}
+document.getElementById('startButton').addEventListener('click', startGame);
