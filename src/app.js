@@ -2,7 +2,7 @@ import express from "express"
 import tetrisRouter from "./routes/tetris.routes.js";
 
 const app = express();
-const PORT = process.env.PORT || 8080
+const PORT = process.env.PORT || 8070
 
 app.use('/api/game', tetrisRouter);
 

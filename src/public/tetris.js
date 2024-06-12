@@ -61,7 +61,6 @@ drawManager.drawGrids(tetrisPrincipal, tetrisList, tetrisSaved, cellSize)
 export function startGame() {
     const startButton = document.getElementById("startButton");
     startButton.disabled = true;
-    puntos = 0;
     let currentY = 0;
     let currentX = 4;
     let interval = 1000;
@@ -69,6 +68,7 @@ export function startGame() {
     let intervalId;
 
     //intervalo de tiempo para la caida de las piezas
+    //mover afuera el gameloop pa que quede más limpio con todo lo necesario
     function gameLoop() {
         let collision = colosionManager.detectCollisions(block.matrix);
         if (puntos >= level) {
@@ -81,7 +81,9 @@ export function startGame() {
         }
         if (collision) {
             colosionManager.markOld(block.matrix);
-            block.matrix = deleteRowManager.eliminarFilasCompletas(block.matrix, puntos);
+            let result = deleteRowManager.eliminarFilasCompletas(block.matrix, puntos);
+            block.matrix = result.matrix
+            puntos = result.puntos
             piece = piecesListManager.getNextPiece(tetrisList, pieceQueue, cellSize);
             pieceQueue = piecesListManager.addPieceToQueue(pieceQueue, maxQueueSize, tetrisList, cellSize);
             currentY = 0;
@@ -108,7 +110,9 @@ export function startGame() {
             currentY += 1;
         } else {
             colosionManager.markOld(block.matrix);
-            block.matrix = deleteRowManager.eliminarFilasCompletas(block.matrix, puntos);
+            let result = deleteRowManager.eliminarFilasCompletas(block.matrix, puntos);
+            block.matrix = result.matrix
+            puntos = result.puntos
             piece = piecesListManager.getNextPiece(tetrisList, pieceQueue, cellSize);
             pieceQueue = piecesListManager.addPieceToQueue(pieceQueue, maxQueueSize, tetrisList, cellSize);
             currentY = 0;

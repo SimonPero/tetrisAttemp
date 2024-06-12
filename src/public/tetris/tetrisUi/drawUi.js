@@ -23,9 +23,7 @@ export default class DrawUi {
 
     drawQueue(tetrisCanvas, pieceQueue, cellSize) {
         // Limpiar el canvas de la lista
-        console.log("tetrisCanvas", tetrisCanvas)
         tetrisCanvas.context.clearRect(0, 0,  tetrisCanvas.canvasWidth,  tetrisCanvas.canvasHeight);
-
         // Dibujar cada pieza en la cola
         for (let i = 0; i < pieceQueue.length; i++) {
             let piece = pieceQueue[i];

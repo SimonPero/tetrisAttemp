@@ -16,7 +16,7 @@ export default class DeleteRowLogic {
             newMatrix.unshift(Array(cols).fill(0));
         }
         document.getElementById("points").innerHTML = puntos;
-        return newMatrix;
+        return {matrix:newMatrix,puntos:puntos};
     }
 
     isRowComplete(row) {
