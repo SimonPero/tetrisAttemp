@@ -1,6 +1,5 @@
 import DrawUi from "./../tetrisUi/drawUi.js";
 const drawManager = new DrawUi();
-
 export default class PiecesListLogic {
     addPieceToQueue(pieceQueue, maxQueueSize, tetrisList, cellSize) {
         if (pieceQueue.length >= maxQueueSize) {
@@ -10,13 +9,13 @@ export default class PiecesListLogic {
         drawManager.drawQueue(tetrisList, pieceQueue, cellSize); // Actualizar la visualización de la cola
         return pieceQueue;
     }
-
     getNextPiece(tetrisList, pieceQueue, cellSize) {
         if (pieceQueue.length > 0) {
             const nextPiece = pieceQueue.shift(); // Retira la pieza más antigua
             drawManager.drawQueue(tetrisList, pieceQueue, cellSize); // Actualizar la visualización de la cola
             return nextPiece;
-        } else {
+        }
+        else {
             return this.getShape();
         }
     }
@@ -52,5 +51,4 @@ export default class PiecesListLogic {
         ];
         return shapes[Math.floor(Math.random() * shapes.length)];
     }
-
 }
