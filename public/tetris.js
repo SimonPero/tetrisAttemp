@@ -89,7 +89,7 @@ export function startGame() {
             currentY = 0;
             currentX = 4;
             coolDown = 0;
-            if (!colosionManager.canMove(block, piece, currentY, currentX)) {
+            if (!colosionManager.canMove(block, piece.shape, currentY, currentX)) {
                 // Game Over
                 startButton.disabled = false;
                 alert("Game Over");
@@ -104,9 +104,9 @@ export function startGame() {
                 drawManager.deleteTetromino(block, 0, 0, tetrisPrincipal, cellSize);
             }
         }
-        matrixManager.insertMatrix(block.matrix, piece, currentY, currentX);
-        drawManager.drawTetromino(block, 0, 0, tetrisPrincipal, cellSize);
-        if (colosionManager.canMove(block, piece, currentY + 1, currentX)) {
+        matrixManager.insertMatrix(block.matrix, piece.shape, currentY, currentX);
+        drawManager.drawTetromino(block, 0, 0, tetrisPrincipal, cellSize, piece.color)
+        if (colosionManager.canMove(block, piece.shape, currentY + 1, currentX)) {
             currentY += 1;
         } else {
             colosionManager.markOld(block.matrix);
@@ -118,7 +118,7 @@ export function startGame() {
             currentY = 0;
             currentX = 4;
             coolDown = 0;
-            if (!colosionManager.canMove(block, piece, currentY, currentX)) {
+            if (!colosionManager.canMove(block, piece.shape, currentY, currentX)) {
                 // Game Over
                 startButton.disabled = false;
                 alert("Game Over");
@@ -142,41 +142,41 @@ export function startGame() {
     document.addEventListener("keydown", (event) => {
         switch (event.key) {
             case "ArrowLeft":
-                if (colosionManager.canMove(block, piece, currentY, currentX - 1)) {
+                if (colosionManager.canMove(block, piece.shape, currentY, currentX - 1)) {
                     matrixManager.markVisited(block.matrix);
                     drawManager.deleteTetromino(block, 0, 0, tetrisPrincipal, cellSize);
                     currentX -= 1;
-                    matrixManager.insertMatrix(block.matrix, piece, currentY, currentX);
-                    drawManager.drawTetromino(block, 0, 0, tetrisPrincipal, cellSize);
+                    matrixManager.insertMatrix(block.matrix, piece.shape, currentY, currentX);
+                    drawManager.drawTetromino(block, 0, 0, tetrisPrincipal, cellSize, piece.color)
                 }
                 break;
             case "ArrowRight":
-                if (colosionManager.canMove(block, piece, currentY, currentX + 1)) {
+                if (colosionManager.canMove(block, piece.shape, currentY, currentX + 1)) {
                     matrixManager.markVisited(block.matrix);
                     drawManager.deleteTetromino(block, 0, 0, tetrisPrincipal, cellSize);
                     currentX += 1;
-                    matrixManager.insertMatrix(block.matrix, piece, currentY, currentX);
-                    drawManager.drawTetromino(block, 0, 0, tetrisPrincipal, cellSize);
+                    matrixManager.insertMatrix(block.matrix, piece.shape, currentY, currentX);
+                    drawManager.drawTetromino(block, 0, 0, tetrisPrincipal, cellSize, piece.color)
                 }
                 break;
             case "ArrowUp":
-                let { pieza: rotatedPiece, offsetX } = colosionManager.rotation(block.matrix, piece, currentX, currentY);
+                let { pieza: rotatedPiece, offsetX } = colosionManager.rotation(block.matrix, piece.shape, currentX, currentY);
                 if (colosionManager.canMove(block, rotatedPiece, currentY, currentX + offsetX)) {
                     matrixManager.markVisited(block.matrix);
                     drawManager.deleteTetromino(block, 0, 0, tetrisPrincipal, cellSize);
-                    piece = rotatedPiece;
+                    piece.shape = rotatedPiece;
                     currentX += offsetX;
-                    matrixManager.insertMatrix(block.matrix, piece, currentY, currentX);
-                    drawManager.drawTetromino(block, 0, 0, tetrisPrincipal, cellSize);
+                    matrixManager.insertMatrix(block.matrix, piece.shape, currentY, currentX);
+                    drawManager.drawTetromino(block, 0, 0, tetrisPrincipal, cellSize, piece.color)
                 }
                 break;
             case "ArrowDown":
-                if (colosionManager.canMove(block, piece, currentY + 1, currentX)) {
+                if (colosionManager.canMove(block, piece.shape, currentY + 1, currentX)) {
                     matrixManager.markVisited(block.matrix);
                     drawManager.deleteTetromino(block, 0, 0, tetrisPrincipal, cellSize);
                     currentY += 1;
-                    matrixManager.insertMatrix(block.matrix, piece, currentY, currentX);
-                    drawManager.drawTetromino(block, 0, 0, tetrisPrincipal, cellSize);
+                    matrixManager.insertMatrix(block.matrix, piece.shape, currentY, currentX);
+                    drawManager.drawTetromino(block, 0, 0, tetrisPrincipal, cellSize, piece.color);
                 }
                 break;
             case "c":
@@ -191,9 +191,9 @@ export function startGame() {
                     drawManager.deleteTetromino(block, 0, 0, tetrisPrincipal, cellSize);
                     currentY = 0;
                     currentX = 4;
-                    matrixManager.insertMatrix(block_saved.matrix, savedPiece, 1, 2);
-                    drawManager.drawTetromino(block, 0, 0, tetrisPrincipal, cellSize);
-                    drawManager.drawTetromino(block_saved, 0, 0, tetrisSaved, cellSize);
+                    matrixManager.insertMatrix(block_saved.matrix, savedPiece.shape, 1, 2);
+                    drawManager.drawTetromino(block, 0, 0, tetrisPrincipal, cellSize, savedPiece.color);
+                    drawManager.drawTetromino(block_saved, 0, 0, tetrisSaved, cellSize, savedPiece.color);
                     coolDown = 1;
                 } else if (coolDown === 0) {
                     savedPiece = piece;
@@ -204,9 +204,9 @@ export function startGame() {
                     drawManager.deleteTetromino(block, 0, 0, tetrisPrincipal, cellSize);
                     currentY = 0;
                     currentX = 4;
-                    matrixManager.insertMatrix(block_saved.matrix, savedPiece, 1, 2);
-                    drawManager.drawTetromino(block, 0, 0, tetrisPrincipal, cellSize);
-                    drawManager.drawTetromino(block_saved, 0, 0, tetrisSaved, cellSize);
+                    matrixManager.insertMatrix(block_saved.matrix, savedPiece.shape, 1, 2);
+                    drawManager.drawTetromino(block, 0, 0, tetrisPrincipal, cellSize, savedPiece.color);
+                    drawManager.drawTetromino(block_saved, 0, 0, tetrisSaved, cellSize, savedPiece.color);
                     coolDown = 1;
                 }
                 break;

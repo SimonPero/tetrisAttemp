@@ -20,37 +20,18 @@ export default class PiecesListLogic {
             return this.getShape();
         }
     }
-    getShape() {
-        const shapes = [
-            [[1], [1], [1], [1]],
-            [
-                [1, 1, 0],
-                [0, 1, 1]
-            ],
-            [
-                [0, 1, 1],
-                [1, 1, 0]
-            ],
-            [
-                [1, 1],
-                [1, 1]
-            ],
-            [
-                [1, 0],
-                [1, 0],
-                [1, 1]
-            ],
-            [
-                [0, 1],
-                [0, 1],
-                [1, 1]
-            ],
-            [
-                [0, 1, 0],
-                [1, 1, 1]
-            ]
-        ];
-        return shapes[Math.floor(Math.random() * shapes.length)];
-    }
+   getShape() {
+    const shapes = [
+        { shape: [[1], [1], [1], [1]], color: "red" },          
+        { shape: [[1, 1, 0], [0, 1, 1]], color: "green" },      
+        { shape: [[0, 1, 1], [1, 1, 0]], color: "blue" },       
+        { shape: [[1, 1], [1, 1]], color: "yellow" },           
+        { shape: [[1, 0], [1, 0], [1, 1]], color: "purple" },   
+        { shape: [[0, 1], [0, 1], [1, 1]], color: "orange" },   
+        { shape: [[0, 1, 0], [1, 1, 1]], color: "cyan" }        
+    ];
+    return shapes[Math.floor(Math.random() * shapes.length)];
+}
+
 
 }

@@ -27,19 +27,20 @@ export default class DrawUi {
         // Dibujar cada pieza en la cola
         for (let i = 0; i < pieceQueue.length; i++) {
             let piece = pieceQueue[i];
+            console.log(piece.color)
             // Calcula la posición de la pieza en el canvas
             let offsetX = 0;
             let offsetY = i * (cellSize * 4); // Asumiendo que cada pieza ocupa 4 celdas de altura
-            this.drawTetromino({ matrix: piece }, offsetX, offsetY, tetrisCanvas, cellSize);
+            this.drawTetromino({ matrix: piece.shape }, offsetX, offsetY, tetrisCanvas, cellSize, piece.color);
         }
     }
 
-    drawTetromino(tetromino, offsetX, offsetY, tetrisCanvas, cellSize) {
+    drawTetromino(tetromino, offsetX, offsetY, tetrisCanvas, cellSize, color) {
         const matrix = tetromino.matrix;
         for (let row = 0; row < matrix.length; row++) {
             for (let col = 0; col < matrix[row].length; col++) {
                 if (matrix[row][col]) {
-                    tetrisCanvas.context.fillStyle = "red";
+                    tetrisCanvas.context.fillStyle = color;
                 } else {
                     tetrisCanvas.context.fillStyle = "black";
                 }
